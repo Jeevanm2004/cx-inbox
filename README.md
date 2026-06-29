@@ -1,6 +1,18 @@
 # Yellow.ai | CX Conversation Triage Inbox
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://cx-inbox.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Jeevanm2004%2Fcx--inbox-181717?style=for-the-badge&logo=github)](https://github.com/Jeevanm2004/cx-inbox)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+
 A purpose-built triage workspace designed for human Customer Experience (CX) agents to instantly prioritize, manage, and resolve escalated conversations. Built with React 19, TypeScript, Vite, Tailwind CSS, and Framer Motion.
+
+## 🔗 Live Demo
+
+👉 **[https://cx-inbox.vercel.app](https://cx-inbox.vercel.app)**
+
+> Fully functional with mock data via MSW (Mock Service Worker) — no backend required.
 
 ---
 
