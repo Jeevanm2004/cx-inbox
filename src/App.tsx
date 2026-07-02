@@ -8,8 +8,8 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import type { Conversation, Message } from './types'
 
 function App() {
-  const { state, dispatch, setSelectedId, refetch } = useConversations();
-  const { conversations, selectedConversationId, isLoading, error } = state;
+  const { state, dispatch, setSelectedId, refetch, flushBuffer, simulateSurge } = useConversations();
+  const { conversations, bufferedConversations, selectedConversationId, isLoading, error } = state;
   const [sidebarWidth, setSidebarWidth] = useState(380);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,11 +99,14 @@ function App() {
         <div className="h-full absolute left-0 top-0" style={{ width: `${sidebarWidth}px` }}>
           <InboxList 
             conversations={conversations} 
+            bufferedConversations={bufferedConversations}
             isLoading={isLoading}
             error={error}
             selectedId={selectedConversationId} 
             onSelectConversation={setSelectedId} 
             onRetry={refetch}
+            onSimulateSurge={simulateSurge}
+            onFlushBuffer={flushBuffer}
             onToggleSidebar={() => setIsSidebarOpen(false)}
             theme={theme}
             onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}

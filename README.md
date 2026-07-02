@@ -75,6 +75,9 @@ The application features a gorgeous, dark/light toggle switcher.
 ### 5. Failed-Action Resolution Path
 The resolution endpoint has a mock 30% failure rate. Instead of changing the button text or failing silently, we designed a sliding Error Toast Notification that pops up at the top-right corner. It features an interactive, keyboard-friendly Retry button and custom bounce animations, ensuring failures can be resolved with a single keystroke.
 
+### 6. Ticket Buffer Mechanism
+To manage high volumes of incoming conversations without overwhelming the agent, we implemented a Ticket Buffer System in the inbox. Instead of immediately cluttering the active queue and distracting agents mid-resolution, new incoming tickets are held in a visual buffer. The buffer displays the total number of pending tickets along with a clear breakdown by priority (Urgent, High, Normal). Agents can click "Release All" to pull these buffered tickets into their active queue when they are ready, providing them with better control over their workload pacing.
+
 ---
 
 ## Architecture & Tech Stack

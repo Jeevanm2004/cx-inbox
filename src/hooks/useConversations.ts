@@ -3,6 +3,7 @@ import type { Conversation, Message } from '../types';
 
 type State = {
   conversations: Conversation[];
+  bufferedConversations: Conversation[];
   isLoading: boolean;
   error: string | null;
   selectedConversationId: string | undefined;
@@ -15,7 +16,9 @@ type Action =
   | { type: 'SET_SELECTED'; payload: string | undefined }
   | { type: 'UPDATE_CONVERSATION'; payload: Conversation }
   | { type: 'REMOVE_CONVERSATION'; payload: string }
-  | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } };
+  | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
+  | { type: 'FLUSH_BUFFER'; payload?: 'urgent' | 'high' | 'normal' | 'all' }
+  | { type: 'SURGE_TICKETS'; payload: Conversation[] };
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -54,6 +57,30 @@ const reducer = (state: State, action: Action): State => {
           return c;
         }),
       };
+    case 'FLUSH_BUFFER': {
+      const priorityToFlush = action.payload || 'all';
+      if (priorityToFlush === 'all') {
+        return {
+          ...state,
+          conversations: [...state.bufferedConversations, ...state.conversations],
+          bufferedConversations: [],
+        };
+      }
+      
+      const toFlush = state.bufferedConversations.filter(c => c.priority === priorityToFlush);
+      const toKeep = state.bufferedConversations.filter(c => c.priority !== priorityToFlush);
+      
+      return {
+        ...state,
+        conversations: [...toFlush, ...state.conversations],
+        bufferedConversations: toKeep,
+      };
+    }
+    case 'SURGE_TICKETS':
+      return {
+        ...state,
+        bufferedConversations: [...state.bufferedConversations, ...action.payload],
+      };
     default:
       return state;
   }
@@ -62,6 +89,7 @@ const reducer = (state: State, action: Action): State => {
 export const useConversations = () => {
   const [state, dispatch] = useReducer(reducer, {
     conversations: [],
+    bufferedConversations: [],
     isLoading: false,
     error: null,
     selectedConversationId: undefined,
@@ -101,5 +129,45 @@ export const useConversations = () => {
     dispatch({ type: 'SET_SELECTED', payload: id });
   }, []);
 
-  return { state, dispatch, setSelectedId, refetch: fetchConversations };
+  const flushBuffer = useCallback((priority?: 'urgent' | 'high' | 'normal' | 'all') => {
+    dispatch({ type: 'FLUSH_BUFFER', payload: priority });
+  }, []);
+
+  const simulateSurge = useCallback(() => {
+    const surgeCount = Math.floor(Math.random() * 4) + 3; // 3 to 6 tickets
+    const buffered: Conversation[] = [];
+    
+    for (let i = 0; i < surgeCount; i++) {
+      const isUrgent = Math.random() > 0.7;
+      const isHigh = !isUrgent && Math.random() > 0.6;
+      const priority = isUrgent ? 'urgent' : isHigh ? 'high' : 'normal';
+      
+      const newTicket: Conversation = {
+        id: `surge-${Date.now()}-${i}`,
+        customerName: `Surge Customer ${i + 1}`,
+        customerEmail: `surge${i + 1}@example.com`,
+        customerSince: new Date().toISOString(),
+        channel: ['email', 'chat', 'whatsapp'][Math.floor(Math.random() * 3)] as 'email' | 'chat' | 'whatsapp',
+        priority,
+        status: 'open',
+        waitingTime: 0,
+        csatScore: 0,
+        escalationReason: '',
+        lastMessage: 'I need help immediately!',
+        assignedTo: null,
+        messages: [{
+          id: `msg-surge-${Date.now()}-${i}`,
+          sender: 'customer',
+          text: 'I need help immediately!',
+          timestamp: new Date().toISOString(),
+        }],
+      };
+      
+      buffered.push(newTicket);
+    }
+    
+    dispatch({ type: 'SURGE_TICKETS', payload: buffered });
+  }, []);
+
+  return { state, dispatch, setSelectedId, refetch: fetchConversations, flushBuffer, simulateSurge };
 };

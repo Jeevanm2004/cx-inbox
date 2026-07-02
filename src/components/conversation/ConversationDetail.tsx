@@ -27,7 +27,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({
   isSidebarOpen
 }) => {
   const { assign, isLoading: isAssigning } = useAssign();
-  const { resolve, isLoading: isResolving } = useResolve();
+  const { resolve, unresolve, isLoading } = useResolve();
   const { reply, isLoading: isReplying } = useReply();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);

@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { RotateCw, Search, X, TrendingUp, Star, WifiOff, Inbox, PanelLeftClose, ChevronDown, Sun, Moon } from 'lucide-react';
+import { RotateCw, Search, X, TrendingUp, Star, WifiOff, Inbox, PanelLeftClose, ChevronDown, Sun, Moon, Zap } from 'lucide-react';
 import type { Conversation } from '../../types';
 import { groupConversationsByPriority } from '../../utils/priority';
 import { ConversationCard } from './ConversationCard';
 
 interface InboxListProps {
   conversations: Conversation[];
+  bufferedConversations?: Conversation[];
   isLoading?: boolean;
   error?: string | null;
   selectedId?: string;
   onSelectConversation: (id: string) => void;
   onRetry?: () => void;
+  onSimulateSurge?: () => void;
+  onFlushBuffer?: (priority?: 'urgent' | 'high' | 'normal' | 'all') => void;
   onToggleSidebar?: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -18,11 +21,14 @@ interface InboxListProps {
 
 export const InboxList: React.FC<InboxListProps> = ({ 
   conversations, 
+  bufferedConversations = [],
   isLoading,
   error,
   selectedId, 
   onSelectConversation,
   onRetry,
+  onSimulateSurge,
+  onFlushBuffer,
   onToggleSidebar,
   theme = 'light',
   onToggleTheme
@@ -31,6 +37,7 @@ export const InboxList: React.FC<InboxListProps> = ({
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'urgent' | 'high' | 'normal'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showStats, setShowStats] = useState(false);
+  const [previewPriority, setPreviewPriority] = useState<'urgent' | 'high' | 'normal' | null>(null);
 
   const filteredConversations = conversations.filter(c => {
     const matchesStatus = filterType === 'open' 
@@ -107,6 +114,15 @@ export const InboxList: React.FC<InboxListProps> = ({
               <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             
+            {/* Simulate Surge Button */}
+            <button 
+              onClick={onSimulateSurge} 
+              className="p-1.5 text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-md transition-colors active:scale-95"
+              title="Simulate Surge"
+            >
+              <Zap className="w-4 h-4" />
+            </button>
+            
             {/* Sidebar Toggle Button */}
             <button 
               onClick={onToggleSidebar}
@@ -146,6 +162,82 @@ export const InboxList: React.FC<InboxListProps> = ({
             </div>
           )}
         </div>
+
+        {/* Buffer Banner */}
+        {bufferedConversations.length > 0 && (
+          <div className="flex flex-col gap-2 p-3 rounded-xl bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-500/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">
+                  {bufferedConversations.length} tickets in buffer
+                </span>
+              </div>
+              <button 
+                onClick={() => onFlushBuffer?.('all')}
+                className="text-[10px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-900/50 bg-white dark:bg-violet-950 px-2 py-1 rounded-md border border-violet-200 dark:border-violet-800/50 transition-colors"
+              >
+                Release All
+              </button>
+            </div>
+            
+            <div className="flex gap-2 mt-1">
+              {['urgent', 'high', 'normal'].map(prio => {
+                const count = bufferedConversations.filter(c => c.priority === prio).length;
+                if (count === 0) return null;
+                
+                const styles = {
+                  urgent: 'bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-200 dark:hover:bg-rose-900/50',
+                  high: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 hover:bg-amber-200 dark:hover:bg-amber-900/50',
+                  normal: 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                }[prio];
+                
+                return (
+                  <button
+                    key={prio}
+                    onClick={() => setPreviewPriority(previewPriority === prio ? null : prio as 'urgent' | 'high' | 'normal')}
+                    className={`flex-1 flex justify-between items-center px-2 py-1.5 rounded-lg border text-[10px] font-bold uppercase transition-colors ${previewPriority === prio ? 'ring-2 ring-violet-500 ' + styles : styles}`}
+                  >
+                    <span>{prio}</span>
+                    <span className="bg-white/50 dark:bg-black/20 px-1.5 rounded text-[11px]">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Preview Section */}
+            {previewPriority && (
+              <div className="mt-2 bg-white dark:bg-black/40 border border-slate-200 dark:border-zinc-800 rounded-lg p-2 flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{previewPriority} Previews</span>
+                  <button onClick={() => setPreviewPriority(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1.5 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
+                  {bufferedConversations.filter(c => c.priority === previewPriority).map(c => (
+                    <div key={c.id} className="bg-slate-50 dark:bg-zinc-900/50 rounded-md p-2 border border-slate-100 dark:border-zinc-800/50 flex flex-col gap-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">{c.customerName}</span>
+                        <span className="text-[9px] font-semibold text-slate-400 bg-white dark:bg-black px-1.5 py-0.5 rounded uppercase">{c.channel}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{c.lastMessage}</span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    onFlushBuffer?.(previewPriority);
+                    setPreviewPriority(null);
+                  }}
+                  className="mt-1 w-full py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors"
+                >
+                  Release {bufferedConversations.filter(c => c.priority === previewPriority).length} Tickets
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Triage Insights Dashboard (only shown when not loading, and matches Open tab) */}
         {!isLoading && !error && filterType === 'open' && (

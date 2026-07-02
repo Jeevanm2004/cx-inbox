@@ -34,7 +34,32 @@ export const handlers = [
 
     return HttpResponse.json(mockConversations[conversationIndex]);
   }),
+  
+  http.put('/api/conversations/:id/unresolve', async ({ params }) => {
+    await randomDelay();
+    const { id } = params;
 
+    // Fails 30% of the time
+    if (Math.random() < 0.3) {
+      return HttpResponse.json(
+        { error: 'Failed to unresolve conversation' },
+        { status: 500 }
+      );
+    }
+
+    const conversationIndex = mockConversations.findIndex((c) => c.id === id);
+    if (conversationIndex === -1) {
+      return HttpResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    mockConversations[conversationIndex] = {
+      ...mockConversations[conversationIndex],
+      status: 'open',
+      assignedTo: null,
+    };
+
+    return HttpResponse.json(mockConversations[conversationIndex]);
+  }),
   http.put('/api/conversations/:id/assign', async ({ params }) => {
     await randomDelay();
     const { id } = params;
